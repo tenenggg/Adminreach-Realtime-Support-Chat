@@ -3,11 +3,10 @@ const express = require('express');                   // web framework for Node.
 const http = require('http');                         // built-in HTTP module to create the server
 const { Server } = require('socket.io');             // Socket.io for real-time communication
 const cors = require('cors');                        // middleware to allow cross-origin requests
-const jwt = require('jsonwebtoken');                 // module to handle JSON Web Tokens for security
 
 
 // Environment Configuration
-// When running as an EXE, it look for .env NEXT TO the .exe file
+// When running as an EXE, it looks for .env NEXT TO the .exe file
 const envPath = process.pkg                           // checks if the app is bundled as an executable
   ? path.join(path.dirname(process.execPath), '.env') // joins the exe path with .env
   : path.join(__dirname, '.env');                    // otherwise joins current dir with .env
@@ -15,10 +14,10 @@ const envPath = process.pkg                           // checks if the app is bu
 require('dotenv').config({ path: envPath });          // loads environment variables from the .env file
 
 
-// Model and Route imports
-const chatModels = require('./models/chatmodels');    // imports chat-related database queries
+// Route and Socket imports
 const authRoutes = require('./routes/authRoutes');    // imports authentication API endpoints
 const chatRoutes = require('./routes/chatRoutes');    // imports chat-related API endpoints
+const { initSocket } = require('./socket/socketHandler'); // imports socket initialization logic
 
 
 // App and Server initialization
@@ -52,114 +51,14 @@ app.get('*', (req, res) => {                          // handles any route that 
 // Socket.io Setup
 const io = new Server(server, {                       // initializes Socket.io on the created server
   cors: {
-    origin: "*",                                      // allows all origins to connect (adjust for production)
-    methods: ["GET", "POST"]                          // allowed HTTP methods for handshake
+    origin: '*',                                      // allows all origins to connect (adjust for production)
+    methods: ['GET', 'POST']                          // allowed HTTP methods for handshake
   }
 });
 app.set('io', io);                                    // makes the io instance accessible in request handlers
 
-
-
-// Socket Authentication middleware
-io.use((socket, next) => {                            // runs before any socket connection is established
-  const token = socket.handshake.auth.token;          // extracts the JWT token from the handshake
-  
-  if (!token) {                                       // checks if token is missing
-    return next(new Error("Authentication error: No token provided")); // rejects connection if no token
-  }
-
-  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => { // verifies the JWT token
-    if (err) return next(new Error("Authentication error: Invalid token")); // rejects if verification fails
-    socket.user = decoded;                            // stores decoded user info in the socket object
-    next();                                           // allows the connection to proceed
-  });
-});
-
-
-const onlineUsers = new Map();                        // creating a map to track userId -> socketId mapping
-
-
-// Main Socket Connection Logic
-io.on('connection', (socket) => {                      // triggered when a new client connects
-  console.log(`User connected: ${socket.user.username} (${socket.user.id})`); // logs the connection info
-  onlineUsers.set(socket.user.id, socket.id);         // adds the user to the online tracking map
-
-  if (socket.user.role === 'admin') {                 // checks if the connected user is an admin
-    socket.join('admins');                            // adds admin users to a special 'admins' room
-  }
-
-
-  // Handling incoming support messages from users
-  socket.on('support_message', async ({ content }) => { // listens for messages sent by regular users
-    console.log(`📩 [Support Message] From User ID: ${socket.user.id}, Content: ${content}`);
-    
-    try {
-      const senderId = Number(socket.user.id);         // converts user id to a number
-      const adminDummyId = 1;                         // standard ID for the admin receiver
-      
-      const savedMessage = await chatModels.saveMessage(senderId, adminDummyId, content); // saves message to DB
-      console.log(`✅ [Support Message] Saved to DB with ID: ${savedMessage.id}`);
-
-      const createdMessage = {                         // constructs the message object for broadcasting
-        id: savedMessage.id,
-        sender_id: senderId,
-        receiver_id: adminDummyId,
-        content,
-        created_at: savedMessage.created_at,
-        sender_name: socket.user.username
-      };
-
-      io.to('admins').emit('receive_message', createdMessage); // broadcasts message to all connected admins
-      socket.emit('message_sent', createdMessage);    // confirms back to the sender that it was sent
-      
-    } catch (err) {
-      console.error("❌ [Support Message] Error saving message:", err); // logs error if DB save fails
-      socket.emit('message_error', { error: 'Could not send message' }); // sends error status back to user
-    }
-  });
-
-
-  // Handling admin replies to users
-  socket.on('admin_reply', async ({ receiverId, content }) => { // listens for replies sent by admins
-    console.log(`📩 [Admin Reply] From Admin ID: ${socket.user.id} to User ID: ${receiverId}`);
-    
-    try {
-      const senderId = Number(socket.user.id);         // current admin's ID
-      const targetId = Number(receiverId);             // the specific user being replied to
-      
-      const savedMessage = await chatModels.saveMessage(senderId, targetId, content); // saves reply to DB
-      console.log(`✅ [Admin Reply] Saved to DB with ID: ${savedMessage.id}`);
-
-      const createdMessage = {                         // constructs the reply message object
-        id: savedMessage.id,
-        sender_id: senderId,
-        receiver_id: targetId,
-        content,
-        created_at: savedMessage.created_at,
-        sender_name: socket.user.username
-      };
-
-      const receiverSocketId = onlineUsers.get(targetId); // look up the receiver's socket ID
-      if (receiverSocketId) {                             // checks if the user is currently online
-        io.to(receiverSocketId).emit('receive_message', createdMessage); // sends message directly to user
-      }
-
-      socket.to('admins').emit('receive_message', createdMessage); // syncs the reply across other admin windows
-      socket.emit('message_sent', createdMessage);       // confirms back to the admin that it was sent
-      
-    } catch (err) {
-      console.error("❌ [Admin Reply] Error saving message:", err); // logs error if DB save fails
-      socket.emit('message_error', { error: 'Could not send message' }); // sends error status back to admin
-    }
-  });
-
-
-  // Handling socket disconnection
-  socket.on('disconnect', () => {                      // triggered when a client closes the connection
-    console.log(`User disconnected: ${socket.user.username}`); // logs who disconnected
-    onlineUsers.delete(socket.user.id);                // removes them from the online tracker
-  });
-});
+const onlineUsers = new Map();                        // map to track userId -> socketId mapping
+initSocket(io, onlineUsers);                          // hands off all socket logic to the socket handler
 
 
 // Server Start Configuration
@@ -178,4 +77,3 @@ server.listen(PORT, ip_address, () => {
   }
   process.exit(1);                                     // shuts down the app on fatal startup errors
 });
-
