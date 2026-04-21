@@ -49,7 +49,7 @@ C. FILE DEPLOYMENT:
       - DB_PORT=5432
       - DB_NAME=adminreach (change if your database name is different)
       - JWT_SECRET=change_this_to_a_strong_secret
-      - IP_ADDRESS=YOUR_SERVER_IPV4 (example: 192.168.1.105)
+      - IP_ADDRESS=YOUR_SERVER_IPV4 (example: 169.0.0.69)
 
    7. Start the backend using ONE of these:
       - Option A (Executable): double-click your server executable inside C:\AdminReach\Backend

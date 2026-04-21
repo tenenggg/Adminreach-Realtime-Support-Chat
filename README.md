@@ -9,18 +9,6 @@ It includes:
 - Admin inbox and reply workflow
 - Desktop client packaging with Electron
 
-## Repository Name And Description
-
-Recommended GitHub repository name:
-- `adminreach-realtime-support-chat`
-
-Recommended GitHub description:
-- `Real-time internal support chat system built with Node.js, Express, PostgreSQL, Socket.io, and an Electron desktop client.`
-
-Alternative repository names:
-- `adminreach-chat-platform`
-- `adminreach-helpdesk-chat`
-- `adminreach-electron-chat-system`
 
 ## Project Structure
 
