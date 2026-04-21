@@ -207,3 +207,8 @@ npm run build
 
 ![Use Case Diagram](docs/media/use-cases/use-case-overview.png)
 
+## ERD Diagram
+
+![ERD Diagram](docs/media/architecture/ERD.png)
+
+
