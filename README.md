@@ -207,38 +207,3 @@ npm run build
 
 ![Use Case Diagram](docs/media/use-cases/use-case-overview.png)
 
-## Adding UI Images And Diagrams
-
-You said you have:
-- UI screenshots
-- system architecture diagram
-- flowcharts
-- use-case diagram
-
-Use this repository layout:
-
-```text
-docs/
-  media/
-    ui/
-    architecture/
-    flowcharts/
-    use-cases/
-```
-
-Then follow `docs/README.media.md` for naming and markdown embedding examples.
-
-## Security Notes
-
-- Never commit real `.env` files or production secrets.
-- Rotate `JWT_SECRET` before production.
-- Restrict CORS origins for production environments.
-- Replace seeded default passwords in `database/setup.sql`.
-
-## License
-
-Use any license you prefer (MIT is common for portfolio/public sharing).
-
----
-
-If you want, this README can be adjusted to a recruiter-friendly or enterprise handover style before you publish.
