@@ -1,0 +1,251 @@
+AdminReach - Libraries & Dependencies Explained
+================================================
+
+A detailed breakdown of every library used in this project, why it was chosen,
+what it does, and what the alternatives are.
+
+
+================================================================
+BACKEND NPM PACKAGES
+================================================================
+
+1. Express
+----------
+What it is:
+  Express is a web framework for Node.js. It handles incoming HTTP requests
+  (like GET, POST, DELETE) and routes them to the correct function in the controller.
+
+Why it's needed:
+  Without Express, you would have to write raw Node.js HTTP handling code from
+  scratch — manually parsing URLs, headers, and request bodies. Express simplifies
+  all of that into clean, readable route definitions.
+
+Where it's used:
+  server.js, authRoutes.js, chatRoutes.js
+
+Alternatives:
+  Fastify (faster but less beginner-friendly), Koa, Hapi.
+  Express was chosen because it is the most widely used and has the most
+  documentation and community support.
+
+
+----------------------------------------------------------------
+
+2. Socket.io
+------------
+What it is:
+  Socket.io is a real-time communication library that creates a persistent
+  two-way connection (called a WebSocket) between the browser and the server.
+
+Why it's needed:
+  Normal HTTP requests are one-way and short-lived — the browser asks, the
+  server answers, and the connection closes. For a chat system, this means you
+  would never know a new message arrived unless you manually refreshed the page.
+  Socket.io solves this by keeping the connection open at all times, so the server
+  can push messages to the browser the moment they arrive. Without Socket.io,
+  this chat system simply would not work as a real-time application.
+
+Where it's used:
+  server.js (backend), socket.js and admin.js / chat.js (frontend via CDN)
+
+Alternatives:
+  Vanilla WebSocket API (built into browsers but requires more manual setup),
+  Pusher (paid third-party service), Firebase Realtime Database (cloud-based).
+  Socket.io was chosen because it provides automatic fallbacks, reconnection
+  handling, and room-based broadcasting out of the box.
+
+
+----------------------------------------------------------------
+
+3. bcryptjs
+-----------
+What it is:
+  bcryptjs is a password hashing library. It takes a plain-text password and
+  turns it into a scrambled, one-way string called a hash.
+
+Why it's needed:
+  Passwords must never be stored in plain text in a database. If someone hacks
+  the database and passwords are stored as-is, every user's account is immediately
+  compromised. bcryptjs hashes the password before storing it, and the original
+  password can never be recovered from the hash. During login, bcryptjs re-hashes
+  the input and compares it to the stored hash.
+
+Where it's used:
+  authController.js — during registration (bcrypt.hash) and login (bcrypt.compare)
+
+Difference from bcrypt:
+  bcrypt is a native C++ addon, while bcryptjs is pure JavaScript.
+  In day-to-day usage, both expose the same hashing and compare API,
+  so bcryptjs works as a drop-in replacement in existing code.
+  For this project, bcryptjs was selected because pkg cannot bundle
+  native bcrypt cleanly, but it can bundle bcryptjs without extra steps.
+
+Alternatives:
+  Argon2 (currently considered stronger than bcrypt), scrypt, PBKDF2.
+  bcryptjs was chosen because it is easy to use, widely adopted, and pure
+  JavaScript, which helps compatibility in packaged environments.
+
+
+----------------------------------------------------------------
+
+4. jsonwebtoken (JWT)
+---------------------
+What it is:
+  jsonwebtoken is a library that creates and verifies JSON Web Tokens — a
+  compact, signed string that contains user information like their ID, username,
+  and role.
+
+Why it's needed:
+  HTTP is stateless, meaning the server forgets who you are after every request.
+  Without a token, users would have to send their username and password on every
+  single request, which is extremely insecure. JWT solves this by giving the user
+  a signed token after login. The user sends this token with every request, and
+  the server verifies it without needing to check the database each time.
+
+Where it's used:
+  authController.js (creates the token after login),
+  authMiddleware.js (verifies the token on every protected route)
+
+Alternatives:
+  Session-based authentication with express-session (stores session on the server
+  using cookies), Passport.js (authentication middleware supporting many
+  strategies). JWT was chosen because it is stateless — the server does not need
+  to store anything, which makes it lightweight and scalable.
+
+
+----------------------------------------------------------------
+
+5. pg (node-postgres)
+---------------------
+What it is:
+  pg is the official PostgreSQL client for Node.js. It allows the backend to
+  connect to and query the PostgreSQL database.
+
+Why it's needed:
+  Node.js cannot talk to a PostgreSQL database by default. The pg library provides
+  the connection pool and query methods needed to run SQL statements from
+  JavaScript code.
+
+Where it's used:
+  config/db.js (sets up the connection pool),
+  authmodels.js, chatmodels.js (all SQL queries)
+
+Alternatives:
+  Sequelize (ORM — writes SQL for you automatically), Prisma (modern ORM with
+  type safety), Knex (query builder). Raw pg was chosen to keep the project
+  explicit and educational — every SQL query is visible and understandable rather
+  than hidden behind an abstraction layer.
+
+
+----------------------------------------------------------------
+
+6. dotenv
+---------
+What it is:
+  dotenv is a library that reads a .env file and loads its contents into
+  process.env, making them available as environment variables throughout the app.
+
+Why it's needed:
+  Sensitive values like the database password, JWT secret key, and server port
+  should never be hardcoded directly in the source code. If the code is ever
+  shared or pushed to GitHub, those secrets would be exposed. dotenv keeps them
+  in a separate .env file that is excluded from version control.
+
+Where it's used:
+  server.js (backend), Electron/main.js (Electron app)
+
+Alternatives:
+  Direct process.env setup (requires manual configuration on each machine),
+  config management tools like nconf. dotenv was chosen because it is simple,
+  widely used, and works with zero configuration.
+
+
+----------------------------------------------------------------
+
+7. cors
+-------
+What it is:
+  CORS stands for Cross-Origin Resource Sharing. The cors library adds HTTP
+  headers to server responses that tell the browser it is allowed to make
+  requests from a different origin (domain or port).
+
+Why it's needed:
+  Browsers block requests by default if the frontend and backend are on different
+  origins — this is a built-in security feature. For example, if the frontend
+  runs on port 3000 and the backend on port 5000, requests would be blocked
+  without CORS. This library lifts that restriction by adding the correct
+  headers automatically.
+
+Where it's used:
+  server.js — applied as global middleware
+
+Alternatives:
+  Manually setting the Access-Control-Allow-Origin header on every response.
+  The cors library was chosen because it handles all the edge cases (preflight
+  requests, allowed methods, allowed headers) automatically in one line.
+
+
+================================================================
+BUILT-IN NODE.JS MODULES
+================================================================
+
+These modules come pre-installed with Node.js. No installation needed.
+
+path
+  Provides utilities for working with file and directory paths. Used to safely
+  join folder names across different operating systems (Windows uses backslash,
+  Linux/Mac use forward slash). Used in server.js and Electron/main.js to
+  locate the frontend folder and .env file.
+
+http
+  The core Node.js HTTP module used to create the underlying server that both
+  Express and Socket.io attach to. Express on its own cannot handle WebSocket
+  connections — wrapping it in an http.Server allows Socket.io to share the
+  same port.
+
+fs (File System)
+  Used in Electron/main.js to check whether the .env file exists at the expected
+  location before trying to load it. Prevents a crash if the file is missing.
+
+
+================================================================
+ELECTRON APP
+================================================================
+
+electron
+  Electron is a framework that wraps a web application (HTML, CSS, JavaScript)
+  inside a desktop window and packages it as an installable .exe file. The
+  main.js file controls the window — its size, title, and which URL to load.
+  This allows AdminReach to be distributed as a desktop application while still
+  running a standard web frontend internally.
+
+  Alternatives: NW.js (similar approach), Tauri (newer and lighter, uses Rust).
+  Electron was chosen because it is the most mature and widely supported option.
+
+
+================================================================
+FRONTEND (BROWSER)
+================================================================
+
+socket.io-client (via CDN)
+  The browser-side companion to the backend Socket.io library. It is loaded via
+  a script tag in admin.html and chat.html directly from a CDN, meaning no build
+  step or npm installation is required on the frontend. It provides the io()
+  function used in socket.js to establish the WebSocket connection to the server.
+
+  All other frontend JavaScript files (api.js, auth.js, chat.js, admin.js,
+  register.js, socket.js) are written in plain vanilla JavaScript with no
+  frameworks or bundlers. This keeps the frontend simple, fast, and easy to
+  understand.
+
+
+================================================================
+SUMMARY COUNT
+================================================================
+
+  Backend npm packages         : 7
+  Built-in Node.js modules     : 3
+  Electron packages            : 1
+  Frontend CDN libraries       : 1
+  ----------------------------------------
+  Total                        : 12

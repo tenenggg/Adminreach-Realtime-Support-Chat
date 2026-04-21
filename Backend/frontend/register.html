@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register - Real-Time Chat</title>                 <!-- Page title for the registration screen -->
+  <link rel="stylesheet" href="css/styles.css">           <!-- Unified CSS style file -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+
+<body class="auth-page">
+  <div class="auth-container">                             <!-- Wrapper for the authentication layout -->
+
+
+    <!-- Registration Card -->
+    <div class="auth-card">
+
+
+      <!-- Form Header -->
+      <div class="auth-header">
+        <h1>Create Account</h1>
+        <p>Join our real-time community</p>
+      </div>
+
+
+      <!-- Registration Form -->
+      <form id="registerForm" class="auth-form">
+
+
+        <!-- Username Entry -->
+        <div class="input-group">
+          <label for="username">Username</label>
+          <div class="input-wrapper">
+            <input type="text" id="username" placeholder="Choose a username" required>
+          </div>
+        </div>
+
+
+        <!-- Password Entry -->
+        <div class="input-group">
+          <label for="password">Password</label>
+          <div class="input-wrapper">
+            <input type="password" id="password" placeholder="Create a password" required>
+          </div>
+        </div>
+
+
+        <!-- Confirmation for Password -->
+        <div class="input-group">
+          <label for="confirmPassword">Confirm Password</label>
+          <div class="input-wrapper">
+            <input type="password" id="confirmPassword" placeholder="Confirm your password" required>
+          </div>
+        </div>
+
+
+        <!-- Submit button -->
+        <button type="submit" class="btn-primary">Sign Up</button>
+
+
+        <!-- Status message containers (Errors and Success) -->
+        <div id="errorMessage" class="error-message"></div>
+        <div id="successMessage" class="success-message"></div>
+
+
+      </form>
+
+
+      <!-- Navigation back to Login -->
+      <div class="auth-footer">
+        <p>Already have an account? <a href="login.html">Sign In</a></p>
+      </div>
+
+
+    </div>
+  </div>
+
+
+
+
+  <!-- Script inclusions -->
+  <script src="js/api.js"></script>                        <!-- handling API base configuration -->
+  <script src="js/register.js"></script>                   <!-- handling registration logic -->
+</body>
+</html>
+

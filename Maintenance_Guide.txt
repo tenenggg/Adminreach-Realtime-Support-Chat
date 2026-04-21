@@ -1,0 +1,108 @@
+***********************************************************************
+                ADMINREACH: MAINTENANCE GUIDE
+***********************************************************************
+This guide is for anyone responsible for keeping the AdminReach system
+running. You do not need to be a programmer, just follow these steps.
+
+=======================================================================
+PART 1: HOW THE SYSTEM WORKS (The "Engine")
+=======================================================================
+The system has two main parts:
+1. THE SERVER (Master PC): This is the "brain" that stores data and runs the API.
+2. THE APP (Employee PC): This is the desktop app employees use to access the system.
+
+Most maintenance happens on the Master PC.
+
+
+
+=======================================================================
+PART 2: IS THE SERVER CURRENTLY RUNNING?
+=======================================================================
+Before you do anything, check if the server is already online.
+1. Open a terminal (Command Prompt or PowerShell).
+2. Type: pm2 status
+
+- If you see "adminreach" with a green "online" status:
+  YOU ARE GOOD. The system is working in the background.
+
+- If you see "command not found" or the list is empty:
+  The server is either off or PM2 is not installed yet. (See Part 3).
+
+
+
+=======================================================================
+PART 3: WHAT TO DO IF YOU CHANGE THE CODE
+=======================================================================
+If someone edits the files (the code), the server needs to be
+"refreshed" to see those changes.
+
+--- SCENARIO A: PM2 IS INSTALLED (The Automatic Way) ---
+If you are using the office server, PM2 should already be there.
+1. Open terminal inside the Backend folder.
+2. Type: pm2 restart adminreach
+3. Result: The server will blink off and back on with the new code.
+
+--- SCENARIO B: PM2 IS NOT INSTALLED (The Manual Way) ---
+If you are testing on a new computer and do not have PM2 yet:
+1. Open terminal inside the Backend folder.
+2. Type: node server.js
+3. IMPORTANT: You MUST keep this terminal window open. If you close it,
+   the whole system stops working for everyone.
+
+--- SCENARIO C: UPDATING THE EMPLOYEE APP (.EXE) ---
+If you change app behavior, startup flow, icon, or desktop packaging:
+1. Open terminal inside the Electron folder.
+2. Type: npm run build
+3. Result: This creates a fresh win-unpacked folder inside dist.
+   You must send this new folder to employee computers.
+   (Note: PM2 has nothing to do with this part.)
+
+
+=======================================================================
+PART 4: THE "COPY-PASTE" RULES (Folder Syncing)
+=======================================================================
+Some folders/files exist in multiple places. Keep them in sync.
+
+1. THE WEBSITE FILES (Frontend):
+   There is one frontend folder located inside Backend/frontend.
+   During development, edit this single folder directly.
+   For deployment, copy this frontend folder together with your server .exe and .env.
+
+2. THE ENV FILES (.env):
+   This project currently has 3 separate .env files with different purposes:
+
+   - Backend/.env
+     This is the MOST IMPORTANT one for the server.
+     It contains database and server settings such as:
+     PORT, DB_USER, DB_PASSWORD, DB_HOST, DB_PORT, DB_NAME, JWT_SECRET, IP_ADDRESS.
+
+   - Electron/.env
+     This is used by the Electron project during development/build.
+     It usually contains SERVER_URL only.
+
+   - Electron/dist/win-unpacked/.env
+     This is used by the distributed employee app build.
+     It usually contains SERVER_URL only.
+
+   If the server IP address changes, update SERVER_URL in:
+   - Electron/.env
+   - Electron/dist/win-unpacked/.env
+
+
+
+=======================================================================
+PART 5: TROUBLESHOOTING (Help! It is not working!)
+=======================================================================
+- "Port 5000 busy": Another process is using the port.
+  Try: pm2 stop all
+  Then: pm2 restart adminreach
+
+- "Database Connection Failed": Make sure PostgreSQL service is running
+  on the Master PC and Backend/.env DB values are correct.
+
+- "White Screen on App": The employee app cannot reach the server.
+  Check SERVER_URL in Electron/dist/win-unpacked/.env
+
+- "Cannot connect from other PCs": Check Windows Firewall on the server.
+  Ensure backend port 5000 is allowed.
+***********************************************************************

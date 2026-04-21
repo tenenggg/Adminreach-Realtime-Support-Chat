@@ -1,0 +1,25 @@
+# Dependencies
+**/node_modules/
+
+# Build artifacts
+Backend/*.exe
+Electron/dist/
+
+# Environment files (secrets)
+Backend/.env
+Electron/.env
+Electron/dist/win-unpacked/.env
+
+# Logs and runtime data
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pm2/
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
